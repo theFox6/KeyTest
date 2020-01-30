@@ -5,6 +5,8 @@ import java.awt.event.KeyListener;
 
 import javax.swing.JFrame;
 
+import textAreaIO.PrintingTextArea;
+
 public class Keytest extends JFrame {
 	private static final long serialVersionUID = -5861901296349638473L;
 	private PrintingTextArea pta;

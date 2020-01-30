@@ -1,4 +1,4 @@
 module keytest {
 	requires java.desktop;
-	exports keytest;
+	exports textAreaIO;
 }

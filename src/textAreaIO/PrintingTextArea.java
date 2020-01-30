@@ -1,4 +1,4 @@
-package keytest;
+package textAreaIO;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -9,7 +9,15 @@ import java.util.Scanner;
 
 public class PrintingTextArea extends IOTextArea implements Closeable {
 	private static final long serialVersionUID = 7000005244229705652L;
+	
+	/**
+	 * data printed with this stream is displayed in the text area
+	 */
 	public final PrintStream output = new PrintStream(new TextAreaStream());
+	
+	/**
+	 * a scanner to receive user inputs from the text area
+	 */
 	public final Scanner input = new Scanner(new Readable() {
 		public int read(CharBuffer cb) throws IOException {
 			Latch reading = new Latch(true);
@@ -32,7 +40,7 @@ public class PrintingTextArea extends IOTextArea implements Closeable {
 	}
 
 
-	public class TextAreaStream extends OutputStream {
+	private class TextAreaStream extends OutputStream {
 		private volatile boolean closed;
 	
 		/**

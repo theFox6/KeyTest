@@ -2,6 +2,8 @@ package keytest;
 
 import javax.swing.JFrame;
 
+import textAreaIO.PrintingTextArea;
+
 public class InputTest extends JFrame {
 	private static final long serialVersionUID = -4456525641409425628L;
 	private PrintingTextArea pta;

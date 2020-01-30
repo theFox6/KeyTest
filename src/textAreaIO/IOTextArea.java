@@ -1,4 +1,4 @@
-package keytest;
+package textAreaIO;
 
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
