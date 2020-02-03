@@ -2,10 +2,8 @@ package textAreaIO;
 
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.function.Consumer;
-
+import java.util.concurrent.LinkedTransferQueue;
+import java.util.concurrent.TransferQueue;
 import javax.swing.JTextArea;
 
 /**
@@ -14,7 +12,8 @@ import javax.swing.JTextArea;
 public class IOTextArea extends JTextArea {
 	private static final long serialVersionUID = -3174114718655799243L;
 	private StringBuffer input = new StringBuffer();
-	private final Queue<Consumer<String>> consumerQueue = new ConcurrentLinkedQueue<>();
+	private TransferQueue<String> inputQueue = new LinkedTransferQueue<>();
+	private int inputStart = 0;
 	
 	/**
 	 * sets up a new TextArea and the PrintStream
@@ -23,15 +22,26 @@ public class IOTextArea extends JTextArea {
 		super();
 		setEditable(false);
 		setUpKeyListener();
+		addCaretListener((e) -> {
+			if (!isEditable())
+				return;
+			int cpos = getCaretPosition();
+			if (cpos < inputStart)
+				setCaretPosition(inputStart);
+		});
 	}
 
 	private void setUpKeyListener() {
 		addKeyListener(new KeyAdapter() {
 			public void keyPressed(KeyEvent e) {
+				if (!isEditable())
+					return;
 				int kc = e.getKeyCode();
-				if (kc >= KeyEvent.VK_PAGE_UP && kc <= KeyEvent.VK_DOWN) {
-					//the navigating buttons: left, right, up, down, home, end, page up, page down
-					e.consume();
+				if (kc == KeyEvent.VK_PAGE_UP || kc == KeyEvent.VK_PAGE_DOWN || kc == KeyEvent.VK_UP || kc == KeyEvent.VK_DOWN) {
+				 	e.consume();
+				} else if (kc == KeyEvent.VK_LEFT) {
+					if (getCaretPosition() == inputStart)
+						e.consume();
 				} else if (kc == KeyEvent.VK_BACK_SPACE) {
 					if (input.length() == 0)
 						e.consume();
@@ -39,11 +49,12 @@ public class IOTextArea extends JTextArea {
 			}
 			
 			public void keyTyped(KeyEvent e) {
+				if (!isEditable())
+					return;
 				char c = e.getKeyChar();
 				if (c == KeyEvent.VK_ENTER) {
-					if (!consumerQueue.isEmpty())
-						consumerQueue.remove().accept(input.toString());
-					if (consumerQueue.isEmpty())
+					inputQueue.tryTransfer(input.toString());
+					if (!inputQueue.hasWaitingConsumer())
 						setEditable(false);
 					input = new StringBuffer();
 				} else if (c == KeyEvent.VK_BACK_SPACE) {
@@ -73,15 +84,16 @@ public class IOTextArea extends JTextArea {
 	}
 	
 	/**
-	 * enable the user input
-	 * adds a consumer to the queue that receives the typed string when the user presses enter
-	 * each consumer will receive a separate line
-	 * @param inputConsumer the consumer that receives the text input
+	 * enable the user input and wait until the user presses enter
+	 * @return the text the user entered
+	 * @throws InterruptedException
+	 * 	if the thread is interrupted while waiting for user input
 	 */
-	public void readln(Consumer<String> inputConsumer) {
-		consumerQueue.add(inputConsumer);
+	public String readln() throws InterruptedException {
 		setEditable(true);
 		updateUI();
-		setCaretPosition(getText().length());
+		inputStart  = getText().length();
+		setCaretPosition(inputStart);
+		return inputQueue.take();
 	}
 }

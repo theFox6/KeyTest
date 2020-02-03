@@ -20,10 +20,11 @@ public class PrintingTextArea extends IOTextArea implements Closeable {
 	 */
 	public final Scanner input = new Scanner(new Readable() {
 		public int read(CharBuffer cb) throws IOException {
-			Latch reading = new Latch(true);
-			readln((l) -> {cb.put(l); reading.reset();});
-			while (reading.state())
-				Thread.onSpinWait();
+			try {
+				cb.put(readln());
+			} catch (InterruptedException e) {
+				throw new IOException("reading interrupted",e);
+			}
 			//re-add the newline
 			cb.append((char) 10);
 			return cb.length();
@@ -35,8 +36,8 @@ public class PrintingTextArea extends IOTextArea implements Closeable {
 	 * stop accepting outputs
 	 */
 	public void close() throws IOException {
-		output.close();
 		input.close();
+		output.close();
 	}
 
 
