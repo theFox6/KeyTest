@@ -20,14 +20,14 @@ public class PrintingTextArea extends IOTextArea implements Closeable {
 	 */
 	public final Scanner input = new Scanner(new Readable() {
 		public int read(CharBuffer cb) throws IOException {
+			String text;
 			try {
-				cb.put(readln());
+				text = readln();
 			} catch (InterruptedException e) {
 				throw new IOException("reading interrupted",e);
 			}
-			//re-add the newline
-			cb.append((char) 10);
-			return cb.length();
+			cb.put(text);
+			return text.length();
 		}
 	});
 

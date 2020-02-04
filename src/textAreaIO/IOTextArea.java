@@ -11,7 +11,6 @@ import javax.swing.JTextArea;
  */
 public class IOTextArea extends JTextArea {
 	private static final long serialVersionUID = -3174114718655799243L;
-	private StringBuffer input = new StringBuffer();
 	private TransferQueue<String> inputQueue = new LinkedTransferQueue<>();
 	private int inputStart = 0;
 	
@@ -43,8 +42,10 @@ public class IOTextArea extends JTextArea {
 					if (getCaretPosition() == inputStart)
 						e.consume();
 				} else if (kc == KeyEvent.VK_BACK_SPACE) {
-					if (input.length() == 0)
+					if (getCaretPosition() <= inputStart)
 						e.consume();
+				} else if (kc == KeyEvent.VK_ENTER) {
+					setCaretPosition(getText().length());
 				}
 			}
 			
@@ -53,15 +54,12 @@ public class IOTextArea extends JTextArea {
 					return;
 				char c = e.getKeyChar();
 				if (c == KeyEvent.VK_ENTER) {
-					inputQueue.tryTransfer(input.toString());
-					if (!inputQueue.hasWaitingConsumer())
+					String all = getText();
+					inputQueue.tryTransfer(all.substring(inputStart,all.length()));
+					if (inputQueue.hasWaitingConsumer())
+						inputStart = getCaretPosition();
+					else
 						setEditable(false);
-					input = new StringBuffer();
-				} else if (c == KeyEvent.VK_BACK_SPACE) {
-					if (input.length() > 0)
-						input.deleteCharAt(input.length()-1);
-				} else {
-					input.append(c);
 				}
 			}
 		});
@@ -95,5 +93,9 @@ public class IOTextArea extends JTextArea {
 		inputStart  = getText().length();
 		setCaretPosition(inputStart);
 		return inputQueue.take();
+	}
+	
+	public void clear() {
+		setText("");
 	}
 }
